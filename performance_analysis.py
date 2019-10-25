@@ -3,7 +3,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 
-def basic(results, date_list, total_days):
+def basic(results):
     print('\n_______________________________________________________________________________________________________\n')
     if len(results) == 0:
         print('NO TRADES!')
@@ -22,8 +22,6 @@ def basic(results, date_list, total_days):
     if not winners:
         print('\nAccuracy:\t' + str(round(100 * len(winners) / (len(winners) + len(losers)), 2)) + '%',
               '\nTotal:\t\t' + str(len(results)))
-        days_used = 100 * len(date_list) / total_days
-        print('Days Used:\t' + str(round(days_used, 2)) + '%')
         print('No wins')
         print('Avg Loss:\t' + str(round(100 * (1 - avg_loss), 2)) + '%\tMax Loss:\t' +
               str(round(100 * (1 - np.min(losers)), 2)) + '%')
@@ -33,7 +31,6 @@ def basic(results, date_list, total_days):
         print('(100TA)\n') # 100 Trade Average
         return
     avg_win = np.mean(winners)
-    days_used = 100 * len(date_list) / total_days
     if len(losers) != 0:
         ta100 = (avg_win ** (100 * len(winners) / len(results))) * \
             (avg_loss ** (100 * len(losers) / len(results)))
@@ -41,7 +38,6 @@ def basic(results, date_list, total_days):
         ta100 = avg_win ** 100
     print('\nAccuracy:\t' + str(round(100 * len(winners) / (len(winners) + len(losers)), 2)) + '%',
           '\nTotal:\t\t' + str(len(results)))
-    print('Days Used:\t' + str(round(days_used, 2)) + '%')
     print(
         'Avg Win:\t' + str(round(100 * (avg_win - 1), 2)) +
         '%\tMax Win:\t' + str(round(100 * (np.max(winners) - 1), 2)) + '%')
@@ -74,7 +70,7 @@ def max_return_drawdown(results, leverage=1, verbose=True):
     return 1 - max_dd
 
 
-def simulate(results, acct, commission, leverage=1):
+def simulate(results, acct, commission, leverage):
     print('\n_______________________________________________________________________________________________________\n')
     print('SIMULATION')
     print('Starting acct val:\t', "{:,}".format(round(acct, 2)))
@@ -84,7 +80,7 @@ def simulate(results, acct, commission, leverage=1):
     print('FINAL BALANCE:\t\t', "{:,}".format(round(acct, 2)))
 
 
-def chart_results(results, leverage=1):
+def chart_results(results, leverage):
     plt.clf()
     results = pd.Series(results)
     results -= 1
