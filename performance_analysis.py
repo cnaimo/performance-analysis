@@ -74,7 +74,7 @@ def max_return_drawdown(results, leverage=1, verbose=True):
     return 1 - max_dd
 
 
-def simulate(results, acct, commission, leverage):
+def simulate(results, acct, commission, leverage=1):
     print('\n_______________________________________________________________________________________________________\n')
     print('SIMULATION')
     print('Starting acct val:\t', "{:,}".format(round(acct, 2)))
@@ -84,7 +84,7 @@ def simulate(results, acct, commission, leverage):
     print('FINAL BALANCE:\t\t', "{:,}".format(round(acct, 2)))
 
 
-def chart_results(results, leverage):
+def chart_results(results, leverage=1):
     plt.clf()
     results = pd.Series(results)
     results -= 1
