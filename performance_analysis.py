@@ -80,7 +80,7 @@ def simulate(results, acct, commission, leverage):
     print('FINAL BALANCE:\t\t', "{:,}".format(round(acct, 2)))
 
 
-def chart_results(results, leverage):
+def chart_results(results, leverage=1):
     plt.clf()
     results = pd.Series(results)
     results -= 1
