@@ -47,5 +47,6 @@ Other available functions:
 ```
 max_return_drawdown()
 chart_results()
-sharpe() [annualized]
+sharpe()  [annualized]
+sortino() [annualized]
 
