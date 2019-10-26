@@ -80,7 +80,7 @@ def simulate(results, acct, commission, leverage):
     print('FINAL BALANCE:\t\t', "{:,}".format(round(acct, 2)))
 
 
-def chart_results(results, leverage=1):
+def chart_results(results, leverage):
     plt.clf()
     results = pd.Series(results)
     results -= 1
@@ -95,9 +95,9 @@ def chart_results(results, leverage=1):
     plt.show()
 
 
-def sharpe(returns, leverage=1, annual_risk_free_rate=0.01737, verbose=True):
+def sharpe(result, leverage=1, annual_risk_free_rate=0.01737, verbose=True):
     daily_rfr = annual_risk_free_rate / 252
-    returns = pd.Series(returns)
+    returns = pd.Series(result)
     returns -= 1
     returns *= leverage
     returns = returns.values
@@ -106,3 +106,22 @@ def sharpe(returns, leverage=1, annual_risk_free_rate=0.01737, verbose=True):
     if verbose:
         print('Annualized Sharpe:', round(sharpe, 4))
     return sharpe
+
+
+def sortino(result, leverage=1, annual_risk_free_rate=0.01737, verbose=True):
+    daily_rfr = annual_risk_free_rate / 252
+    returns = pd.Series(result)
+    returns -= 1
+    returns *= leverage
+    returns = returns.values
+    downside = []
+    for i in range(len(returns)):
+        if (returns[i] - daily_rfr) < 0:
+            downside.append((returns[i] - daily_rfr) ** 2)
+        else:
+            downside.append(0)
+    downside_risk = np.mean(downside) ** 0.5
+    sortino = ((np.mean(returns) - daily_rfr) / downside_risk) * (252 ** 0.5)
+    if verbose:
+        print('Annualized Sortino:', round(sortino, 4))
+    return sortino
