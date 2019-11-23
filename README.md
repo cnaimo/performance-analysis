@@ -45,11 +45,12 @@ Starting acct val:	 250,000
 FINAL BALANCE:		 288,077.32
 ```
 
+The ```sharpe()``` and ```sortino()``` functions report the annualized sharpe and sortino values for daily returns. These fuctions measure risk-adjusted return. More information is available [here](https://en.wikipedia.org/wiki/Sharpe_ratio) and [here](https://en.wikipedia.org/wiki/Sortino_ratio).
+
 Other available functions:
 
 ```
 max_return_drawdown()
 chart_results()
-sharpe()  [annualized]
-sortino() [annualized]
+```
 
