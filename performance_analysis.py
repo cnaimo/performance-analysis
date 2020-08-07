@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+import logging
+from typing import Union
 
 
 def basic(results):
@@ -51,20 +53,30 @@ def basic(results):
     print('(100TA)\n')  # 100 Trade Average
 
 
-def max_return_drawdown(results, leverage=1, verbose=True):
-    results = pd.Series(results)
+def max_return_drawdown(results: Union[pd.Series, np.ndarray, list], leverage=1, verbose=True) -> float:
+    """
+    Get the maximum drawdown for strategy returns
+
+    :param results: strategy returns
+    :param leverage: amount of leverage to apply to returns, default=1
+    :param verbose: print drawdown at the end of calculation
+    :return: maximum drawdown in returns
+    """
+    if not isinstance(results, pd.Series):
+        results = pd.Series(results)
     results -= 1
     results *= leverage
     results += 1
-    results = results.values
+    results = results.cumprod()
     max_dd = 1
-    max_gain = 0
+    high = 0
     for i in range(len(results)):
-        gain = np.product(results[: i + 1])
-        if gain > max_gain:
-            max_gain = gain
-        elif gain / max_gain < max_dd:
-            max_dd = gain / max_gain
+        if results.at[i] > high:
+            # new high
+            high = results.at[i]
+        else:
+            # in drawdown period
+            max_dd = min(max_dd, results.at[i]/high)
     if verbose:
         print('Max Drawdown:', round(1 - max_dd, 4))
     return 1 - max_dd
@@ -95,17 +107,60 @@ def chart_results(results, leverage):
     plt.show()
 
 
-def sharpe(result, leverage=1, annual_risk_free_rate=0.01737, verbose=True):
+def sharpe(result: Union[pd.Series, list, np.ndarray], leverage=1,
+           annual_risk_free_rate=0.01737, verbose=True) -> float:
+    """
+    Get the annualized daily sharpe ratio for strategy returns
+    https://en.wikipedia.org/wiki/Sharpe_ratio
+
+    :param result: daily strategy returns
+    :param leverage: amount of leverage to apply to returns, default=1
+    :param annual_risk_free_rate: typically 10 year treasury bond yield, default=0.01737
+    :param verbose: print sharpe ratio at the end of calculation
+    :return: annualized sharpe ratio
+    """
+    if not isinstance(result, pd.Series):
+        result = pd.Series(result)
     daily_rfr = annual_risk_free_rate / 252
+    result -= 1
+    result *= leverage
+    st_dev = result.std()
+    if st_dev != 0:
+        sharpe = ((result.mean() - daily_rfr) / st_dev) * (252 ** 0.5)
+    else:
+        logging.warning("Sharpe Error: Return STDEV=0")
+        sharpe = 0
+    if verbose:
+        print('Annualized Sharpe:', round(sharpe, 4))
+    return sharpe
+
+
+def sharpe_monthly(result, leverage=1, annual_risk_free_rate=0.01737, verbose=True):
+    daily_rfr = annual_risk_free_rate / 12
     returns = pd.Series(result)
     returns -= 1
     returns *= leverage
     returns = returns.values
     returns = np.array(returns)
-    sharpe = ((np.mean(returns) - daily_rfr) / np.std(returns)) * (252 ** 0.5)
+    sharpe = ((np.mean(returns) - daily_rfr) / np.std(returns)) * (12 ** 0.5)
     if verbose:
         print('Annualized Sharpe:', round(sharpe, 4))
     return sharpe
+
+
+def consolidate_monthly_result(data):
+    monthly = {}
+    for date, gain in data.items():
+        if not gain:
+            continue
+        if date[:7] not in monthly.keys():
+            monthly[date[:7]] = []
+        monthly[date[:7]].append(gain)
+    result = []
+    for val in monthly.values():
+        result.append(np.product(val))
+    return result
+
 
 
 def sortino(result, leverage=1, annual_risk_free_rate=0.01737, verbose=True):
@@ -125,3 +180,14 @@ def sortino(result, leverage=1, annual_risk_free_rate=0.01737, verbose=True):
     if verbose:
         print('Annualized Sortino:', round(sortino, 4))
     return sortino
+
+
+def vix_f(data: pd.DataFrame) -> pd.Series:
+    """
+    VIXf
+
+    :param data: pd.DataFrame with at least close and low cols
+    :return: VIXf
+    """
+    highs = data['close'].rolling(20).max()
+    return 100 * (highs-data['low'])/highs
